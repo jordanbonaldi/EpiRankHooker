@@ -7,6 +7,7 @@ import lombok.SneakyThrows;
 import net.neferett.coreengine.Utils.ClassSerializer;
 import net.neferett.hooker.Routes.Route;
 import net.neferett.hooker.Routes.RoutingProperties;
+import net.neferett.redisapi.Utils.SerializationUtils;
 import org.json.JSONObject;
 
 @Route(name = "/test")
@@ -23,6 +24,8 @@ public class Test extends RoutingProperties {
     @Override
     @SneakyThrows
     public JSONObject commandProcess(HttpExchange t) {
+        System.out.println(SerializationUtils.convertStreamToString(t.getRequestBody()));
+
         return ClassSerializer.serialize(new TotoData("toto", 1, 2));
     }
 }

@@ -2,6 +2,7 @@ package net.neferett.hooker.Routes;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpsExchange;
 import lombok.Data;
 import lombok.SneakyThrows;
 import org.json.JSONObject;
@@ -18,7 +19,9 @@ public abstract class RoutingProperties implements HttpHandler {
 
     @Override
     @SneakyThrows
-    public void handle(HttpExchange t) {
+    public void handle(HttpExchange _t) {
+        HttpsExchange t = (HttpsExchange)_t;
+        t.getSSLSession();
         t.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
 
         String response = this.commandProcess(t).toString();
