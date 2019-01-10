@@ -16,13 +16,6 @@ public class JSONUtils {
         JSONObject _obj = new JSONObject();
         JSONArray array = new JSONArray();
 
-        studentList.forEach(e ->
-            Hooker.getInstance().getManager().getCities().forEach(c -> {
-               if (c.getCode().equals(e.getLocation()))
-                   e.setCity(c);
-            })
-        );
-
         studentList.stream().map(SerializationUtils::serialize).forEach(array::put);
 
         return  _obj.put("students", array);

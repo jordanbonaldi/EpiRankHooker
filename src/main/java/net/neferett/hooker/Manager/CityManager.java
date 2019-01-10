@@ -51,5 +51,12 @@ public class CityManager {
 
         this.students = students;
         this.cities = city;
+
+        this.students.forEach(e ->
+                this.cities.forEach(c -> {
+                    if (c.getCode().equals(e.getLocation()))
+                        e.setCity(c);
+                })
+        );
     }
 }

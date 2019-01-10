@@ -36,8 +36,6 @@ public class Search extends RoutingProperties {
 
         List<Student> students = engine.searchAll(sentence);
 
-        System.out.println("toto2");
-
         return JSONUtils.studentListToJSON(students);
     }
 }

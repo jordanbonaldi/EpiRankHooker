@@ -1,6 +1,7 @@
 package net.neferett.hooker.SearchEngine;
 
 import lombok.Data;
+import net.neferett.hooker.Entity.City;
 import net.neferett.hooker.Entity.Student;
 import net.neferett.redisapi.Utils.SerializationUtils;
 import org.apache.lucene.document.Document;
@@ -15,23 +16,23 @@ import java.util.stream.Collectors;
 @Data
 public class Engine {
 
-    private MemoryIndexer indexer;
+    private MemoryIndexer studentIndexer;
 
     private List<Student> students;
 
-    private int max;
+    private int maxStudents;
 
     public Engine() {
-        this.indexer = new MemoryIndexer();
+        this.studentIndexer = new MemoryIndexer();
     }
 
     public void loadStudents(List<Student> students)
     {
-        this.max = students.size();
+        this.maxStudents = students.size();
         this.students = students;
 
         students.forEach(e ->
-            this.indexer.indexDocument("student", e.getTitle())
+            this.studentIndexer.indexDocument("student", e.getTitle())
         );
     }
 
@@ -56,6 +57,13 @@ public class Engine {
         ).collect(Collectors.toList());
     }
 
+    private List<Student> searchCity(String city)
+    {
+        return this.students.stream().filter(e ->
+                e.getCity().getTitle().toLowerCase().equalsIgnoreCase(city)
+        ).collect(Collectors.toList());
+    }
+
     private String returnPattern(String in, String index)
     {
         Pattern pattern = Pattern.compile(index);
@@ -66,7 +74,13 @@ public class Engine {
         return null;
     }
 
+    private List<Student> searchStudent(String[] tab) {
+        List<Document> documents = this.studentIndexer.searchIndex("body", tab[1].toLowerCase() + (tab.length == 3 ? tab[2].toLowerCase() : ""), this.maxStudents);
 
+        return documents.stream().map(e -> this.students.stream().filter(a ->
+                a.getTitle().equals(e.get("body"))).findFirst().orElse(null)
+        ).collect(Collectors.toList());
+    }
 
     public List<Student> searchAll(String searchQuery)
     {
@@ -74,28 +88,34 @@ public class Engine {
         List<Student> gpa = new ArrayList<>();
         List<Student> promo = new ArrayList<>();
         List<Student> students = new ArrayList<>();
+        List<Student> _cities = new ArrayList<>();
 
         if ((al = this.returnPattern(searchQuery, "gpa")) != null) {
             String tab[] = al.split( " ");
+
             gpa.addAll(this.searchGPA(Double.valueOf(tab[2]), tab[1]));
         }
 
         if ((al = this.returnPattern(searchQuery, "promo")) != null) {
             String tab[] = al.split( " ");
+
             promo.addAll(this.searchPromo(Integer.valueOf(tab[1])));
         }
 
         if ((al = this.returnPattern(searchQuery, "student")) != null) {
             String tab[] = al.split( " ");
-            List<Document> documents = this.indexer.searchIndex("body", tab[1].toLowerCase() + (tab.length == 3 ? tab[2].toLowerCase() : ""), this.max);
 
-            students.addAll(documents.stream().map(e -> this.students.stream().filter(a ->
-                    a.getTitle().equals(e.get("body"))).findFirst().orElse(null)
-            ).collect(Collectors.toList()));
+            students.addAll(this.searchStudent(tab));
+        }
+
+        if ((al = this.returnPattern(searchQuery, "city")) != null) {
+            String tab[] = al.split( " ");
+
+            _cities.addAll(this.searchCity(tab[1].toLowerCase()));
         }
 
         return this.students.stream().filter(e ->
-            (gpa.isEmpty() || gpa.contains(e)) && (promo.isEmpty() || promo.contains(e)) && (students.isEmpty() || students.contains(e))
+            (gpa.isEmpty() || gpa.contains(e)) && (promo.isEmpty() || promo.contains(e)) && (students.isEmpty() || students.contains(e)) && (_cities.isEmpty() || _cities.contains(e))
         ).sorted((a, b) ->
                 Double.compare(Double.valueOf(b.getGpa().get(0).getGpa()), Double.valueOf(a.getGpa().get(0).getGpa()))
         ).collect(Collectors.toList());
