@@ -32,4 +32,6 @@ public class Student {
     private @NonNull int credits;
 
     private @NonNull List<StudentGPA> gpa;
+
+    private City city;
 }
