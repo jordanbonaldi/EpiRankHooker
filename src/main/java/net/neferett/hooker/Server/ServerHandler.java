@@ -69,7 +69,7 @@ public class ServerHandler {
         }
     }
 
-    public void addRoute(RoutingProperties properties) {
+    private void addRoute(RoutingProperties properties) {
         Logger.logInChannel("Creating new route : " + properties.getName(), Hooker.getInstance().getFile().getChannel());
         this.server.createContext(properties.getName(), properties);
     }

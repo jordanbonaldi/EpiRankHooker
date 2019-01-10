@@ -30,5 +30,6 @@ public class Student {
     private @NonNull String course_code;
     private @NonNull int studentyear;
     private @NonNull int credits;
+
     private @NonNull List<StudentGPA> gpa;
 }
