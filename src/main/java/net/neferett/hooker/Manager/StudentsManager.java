@@ -31,20 +31,20 @@ public class StudentsManager {
 
     private ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(7);
 
-    private String getRequest(int promotion, int offset)
+    private String getRequest(int year, int promotion, int offset)
     {
-        return "/user/filter/user?format=json&location=" + this.city.getCode() + "&year=" + (Calendar.getInstance().get(Calendar.YEAR) - 1) + "&course=bachelor/classic&promo=tek" + promotion + "&offset=" + offset;
+        return "/user/filter/user?format=json&location=" + this.city.getCode() + "&year=" + year + "&course=bachelor/classic&promo=tek" + promotion + "&offset=" + offset;
     }
 
     private Student getStudent(String login) {
         return (Student) SerializationUtils.deSerialize(Student.class, this.api.call("/user/" + login));
     }
 
-    private void loadStudentsByPromotion(int promotion, int offset) {
+    private void loadStudentsByPromotion(int year, int promotion, int offset) {
         int total;
-        JSONObject students = new JSONObject(this.api.call(this.getRequest(promotion, offset)));
+        JSONObject students = new JSONObject(this.api.call(this.getRequest(year, promotion, offset)));
 
-        System.out.println(this.getRequest(promotion, offset));
+        System.out.println(this.getRequest(year, promotion, offset));
 
         total = students.getInt("total");
         if (0 == total)
@@ -68,17 +68,20 @@ public class StudentsManager {
         offset += array.length();
 
         if (offset < total)
-            this.loadStudentsByPromotion(promotion, offset);
+            this.loadStudentsByPromotion(year, promotion, offset);
     }
 
     public void loadAllStudents() {
         if (null == this.api)
             return;
-        for (int i = 1; i < 4; i++) {
-            int finalI = i;
-            executor.submit(() ->
-                this.loadStudentsByPromotion(finalI, 0)
-            );
+        for (int j = 0; j < 4; j++) {
+            for (int i = 1; i < 4; i++) {
+                int finalI = i;
+                int finalJ = j;
+                executor.submit(() ->
+                        this.loadStudentsByPromotion(2018 - finalJ, finalI, 0)
+                );
+            }
         }
     }
 }
