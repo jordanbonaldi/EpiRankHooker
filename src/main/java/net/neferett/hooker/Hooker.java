@@ -1,7 +1,6 @@
 package net.neferett.hooker;
 
 import lombok.Data;
-import lombok.SneakyThrows;
 import net.neferett.coreengine.CoreEngine;
 import net.neferett.coreengine.Processors.Config.PreConfig;
 import net.neferett.coreengine.Processors.Logger.Logger;
@@ -11,8 +10,8 @@ import net.neferett.hooker.API.HookerAPI;
 import net.neferett.hooker.Commands.LoadDatas;
 import net.neferett.hooker.Configuration.File;
 import net.neferett.hooker.Manager.CityManager;
-import net.neferett.hooker.Routes.RouterManagers;
-import net.neferett.hooker.Server.ServerHandler;
+import net.neferett.httpserver.api.HTTPServerAPI;
+import net.neferett.httpserver.api.Types.HttpTypes;
 import net.neferett.redisapi.RedisAPI;
 
 @Data
@@ -29,8 +28,8 @@ public class Hooker extends ExtendablePlugin {
 
     private PreConfig preConfig;
     private File file;
-    private ServerHandler serverHandler;
-    private RouterManagers managers;
+
+    private HTTPServerAPI serverAPI;
 
     private void loadConfig() {
         this.preConfig = new PreConfig( this.getConfigPath(), File.class);
@@ -39,11 +38,6 @@ public class Hooker extends ExtendablePlugin {
 
     public RedisAPI getNewRedisInstance() {
         return new RedisAPI(this.file.getIp(), this.file.getPassword(), this.file.getRedisPort());
-    }
-
-    private void loadRoutes() {
-        this.managers.buildRoutes();
-        this.serverHandler.addRoutes(this.managers.getRoutes());
     }
 
     private void loadCommands() {
@@ -59,10 +53,9 @@ public class Hooker extends ExtendablePlugin {
 
         this.redisAPI = this.getNewRedisInstance();
 
-        this.managers = new RouterManagers();
-        this.serverHandler = new ServerHandler(this.file.getPort());
-        this.serverHandler.build();
-        this.loadRoutes();
+        this.serverAPI = new HTTPServerAPI(this.file.getPort(), this.getEngine().getConfig().getThreads());
+
+        this.file.getRoutes().forEach(e -> this.serverAPI.addAllRoutesInPath("net.neferett.hooker.Routes", e));
 
         this.loadCommands();
         this.createChannel(this.file.getChannel());
@@ -71,14 +64,14 @@ public class Hooker extends ExtendablePlugin {
 
         Logger.log("DataBase fully loaded !");
 
-        this.serverHandler.start();
+        this.serverAPI.start();
     }
 
     @Override
     public void onDisable() {
         Logger.logInChannel("ShutDown Server", this.file.getChannel());
-        this.serverHandler.stop();
         this.redisAPI.close();
+        this.serverAPI.stop();
     }
 
 }

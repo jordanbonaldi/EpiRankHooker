@@ -1,12 +1,11 @@
-package net.neferett.hooker.Routes.Routes;
-
+package net.neferett.hooker.Routes;
 
 import com.sun.net.httpserver.HttpExchange;
 import lombok.Data;
 import lombok.SneakyThrows;
 import net.neferett.coreengine.Utils.ClassSerializer;
-import net.neferett.hooker.Routes.Route;
-import net.neferett.hooker.Routes.RoutingProperties;
+import net.neferett.httpserver.api.Routing.Route;
+import net.neferett.httpserver.api.Routing.RoutingProperties;
 import net.neferett.redisapi.Utils.SerializationUtils;
 import org.json.JSONObject;
 
@@ -23,7 +22,7 @@ public class Test extends RoutingProperties {
 
     @Override
     @SneakyThrows
-    public JSONObject commandProcess(HttpExchange t) {
+    public JSONObject routeAction(HttpExchange t) {
         System.out.println(SerializationUtils.convertStreamToString(t.getRequestBody()));
 
         return ClassSerializer.serialize(new TotoData("toto", 1, 2));
