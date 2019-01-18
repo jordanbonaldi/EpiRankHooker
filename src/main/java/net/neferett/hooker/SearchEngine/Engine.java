@@ -9,6 +9,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -36,32 +37,25 @@ public class Engine {
         );
     }
 
-    private boolean filtering(double index, String sign, double value) {
-
-        return sign.equals(">=") ?  value >= index :
-                sign.equals("<=") ?  value <= index :
-                        sign.equals(">") ?  value  > index: index < value;
+    private boolean filtering(double index, String sign, double value)
+    {
+        return sign.equals(">") ? index < value
+                : sign.equals("=") ? index == value : index > value;
     }
 
-    private List<Student> searchGPA(double index, String sign)
+    private Predicate<Student> searchGPA(double index, String sign)
     {
-        return this.students.stream().filter(e ->
-                this.filtering(index, sign, e.getGpa().get(0).getGpa().toLowerCase().contains("/") ? 0 : Double.valueOf(e.getGpa().get(0).getGpa()))
-        ).collect(Collectors.toList());
+        return e -> this.filtering(index, sign, e.getGpa().get(0).getGpa().toLowerCase().contains("/") ? 0 : Double.valueOf(e.getGpa().get(0).getGpa()));
     }
 
-    private List<Student> searchPromo(int promo)
+    private Predicate<Student> searchPromo(int promo)
     {
-        return this.students.stream().filter(e ->
-                e.getPromo() == promo
-        ).collect(Collectors.toList());
+        return e -> e.getPromo() == promo;
     }
 
-    private List<Student> searchCity(String city)
+    private Predicate<Student> searchCity(String city)
     {
-        return this.students.stream().filter(e ->
-                e.getCity().getTitle().toLowerCase().equalsIgnoreCase(city)
-        ).collect(Collectors.toList());
+        return e -> e.getCity().getTitle().toLowerCase().equalsIgnoreCase(city);
     }
 
     private String returnPattern(String in, String index)
@@ -74,50 +68,55 @@ public class Engine {
         return null;
     }
 
-    private List<Student> searchStudent(String[] tab) {
+    private Predicate<Student> searchStudent(String[] tab) {
         List<Document> documents = this.studentIndexer.searchIndex("body", tab[1].toLowerCase() + (tab.length == 3 ? tab[2].toLowerCase() : ""), this.maxStudents);
 
-        return documents.stream().map(e -> this.students.stream().filter(a ->
+        List<Student> std = documents.stream().map(e -> this.students.stream().filter(a ->
                 a.getTitle().equals(e.get("body"))).findFirst().orElse(null)
         ).collect(Collectors.toList());
+
+        return e -> std.stream().filter(a -> a.getTitle().equalsIgnoreCase(e.getTitle())).findFirst().orElse(null) != null;
+    }
+
+    private double StringTODouble(String gpa)
+    {
+        try {
+            return Double.valueOf(gpa);
+        } catch (Exception ignored) {
+            return 0;
+        }
     }
 
     public List<Student> searchAll(String searchQuery)
     {
         String al;
-        List<Student> gpa = new ArrayList<>();
-        List<Student> promo = new ArrayList<>();
-        List<Student> students = new ArrayList<>();
-        List<Student> _cities = new ArrayList<>();
 
         if ((al = this.returnPattern(searchQuery, "gpa")) != null) {
             String tab[] = al.split( " ");
 
-            gpa.addAll(this.searchGPA(Double.valueOf(tab[2]), tab[1]));
+            this.students = this.students.stream().filter(this.searchGPA(Double.valueOf(tab[2]), tab[1])).collect(Collectors.toList());
         }
 
         if ((al = this.returnPattern(searchQuery, "promo")) != null) {
             String tab[] = al.split( " ");
 
-            promo.addAll(this.searchPromo(Integer.valueOf(tab[1])));
+            this.students = this.students.stream().filter(this.searchPromo(Integer.valueOf(tab[1]))).collect(Collectors.toList());
         }
 
         if ((al = this.returnPattern(searchQuery, "student")) != null) {
             String tab[] = al.split( " ");
 
-            students.addAll(this.searchStudent(tab));
+            this.students = this.students.stream().filter(this.searchStudent(tab)).collect(Collectors.toList());
         }
 
         if ((al = this.returnPattern(searchQuery, "city")) != null) {
             String tab[] = al.split( " ");
 
-            _cities.addAll(this.searchCity(tab[1].toLowerCase()));
+            this.students = this.students.stream().filter(this.searchCity(tab[1].toLowerCase())).collect(Collectors.toList());
         }
 
-        return this.students.stream().filter(e ->
-            (gpa.isEmpty() || gpa.contains(e)) && (promo.isEmpty() || promo.contains(e)) && (students.isEmpty() || students.contains(e)) && (_cities.isEmpty() || _cities.contains(e))
-        ).sorted((a, b) ->
-                Double.compare(Double.valueOf(b.getGpa().get(0).getGpa()), Double.valueOf(a.getGpa().get(0).getGpa()))
+        return this.students.stream().sorted((a, b) ->
+                Double.compare(StringTODouble(b.getGpa().get(0).getGpa()), StringTODouble(a.getGpa().get(0).getGpa()))
         ).collect(Collectors.toList());
     }
 }
