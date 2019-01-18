@@ -53,7 +53,7 @@ public class Hooker extends ExtendablePlugin {
 
         this.redisAPI = this.getNewRedisInstance();
 
-        this.serverAPI = new HTTPServerAPI(this.file.getPort(), this.getEngine().getConfig().getThreads());
+        this.serverAPI = new HTTPServerAPI(this.file.getPort(), this.getEngine().getConfig().getThreads(), HttpTypes.HTTPS, "password", "testkey");
 
         this.file.getRoutes().forEach(e -> this.serverAPI.addAllRoutesInPath("net.neferett.hooker.Routes", e));
 
