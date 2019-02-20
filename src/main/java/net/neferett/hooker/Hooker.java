@@ -46,14 +46,17 @@ public class Hooker extends ExtendablePlugin {
 
     @Override
     public void onEnable() {
-        this.api = new HookerAPI("https://intra.epitech.eu/auth-948d80eeb89899ed2988307519d86b9383d72629");
+        this.api = new HookerAPI(null);
         this.manager = new CityManager(this.api);
 
         this.loadConfig();
 
         this.redisAPI = this.getNewRedisInstance();
 
-        this.serverAPI = new HTTPServerAPI(this.file.getPort(), this.getEngine().getConfig().getThreads(), HttpTypes.HTTPS, "password", "testkey");
+        if (this.file.isHttps())
+            this.serverAPI = new HTTPServerAPI(this.file.getPort(), this.getEngine().getConfig().getThreads(), HttpTypes.HTTPS, "password", "testkey");
+        else
+            this.serverAPI = new HTTPServerAPI(this.file.getPort(), this.getEngine().getConfig().getThreads());
 
         this.file.getRoutes().forEach(e -> this.serverAPI.addAllRoutesInPath("net.neferett.hooker.Routes", e));
 

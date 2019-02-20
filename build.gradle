@@ -31,7 +31,7 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.4'
     annotationProcessor 'org.projectlombok:lombok:1.18.4'
     compile fileTree(dir: 'libs', include: '*.jar')
-    compile group: 'org.apache.lucene', name: 'lucene-core', version: '7.5.0'
+    compile group: 'org.apache.lucene', name: 'lucene-core', version: '7.7.0'
     compile group: 'org.json', name: 'json', version: '20180813'
     compile group: 'org.reflections', name: 'reflections', version: '0.9.11'
     compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.0.1'
