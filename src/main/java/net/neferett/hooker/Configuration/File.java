@@ -5,7 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import net.neferett.coreengine.Processors.Config.Config;
-import org.graalvm.compiler.api.replacements.Snippet;
 
 import java.util.List;
 
